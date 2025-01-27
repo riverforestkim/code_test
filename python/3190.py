@@ -1,80 +1,67 @@
-import os
-import sys
 from collections import deque
 
-
-def main() :
+def main():
+    N = int(input())  # 보드 크기
+    K = int(input())  # 사과 개수
 
     # f = open('input.txt', 'r')
     # fList = f.read().splitlines()
 
-    fList = sys.stdin.read().splitlines()
+    sMap = [[0] * N for _ in range(N)]  # 보드 초기화
 
-    N = fList[0]
-    K = fList[1]
+    for _ in range(K):  # 사과 위치 입력
+        tX, tY = map(int, input().split())
+        sMap[tX - 1][tY - 1] = 2  # 사과 표시
 
-    qApple = deque()
-    qMove = deque()
-    for i in range(K) :
-        tX, tY = map(int, fList[i + 2].split())
-        qApple.append([tX, tY])
-
-    L = fList[2 + K]
-
+    L = int(input())  # 방향 변환 횟수
     dictMove = {}
 
-    for i in range(L) :
-        tM, tD = map(str, fList[3 + K + i].split())
-        dictMove[tM] = tD
+    for _ in range(L):  # 방향 변환 정보 입력
+        tM, tD = input().split()
+        dictMove[int(tM)] = tD  # 정수 키 사용
 
-    rM = [1, -1, 0,  0]
-    cM = [0, 0, 1, -1]
+    # 방향 이동 (오른쪽, 아래, 왼쪽, 위)
+    rM = [1, 0, -1, 0]
+    cM = [0, 1, 0, -1]
 
-    nIdx = 0
-    nTime = 0
-    '''
-    게임은 NxN 정사각 보드위에서 진행되고, 몇몇 칸에는 사과가 놓여져 있다. 보드의 상하좌우 끝에 벽이 있다. 게임이 시작할때 뱀은 맨위 맨좌측에 위치하고 뱀의 길이는 1 이다. 뱀은 처음에 오른쪽을 향한다.
-
-    뱀은 매 초마다 이동을 하는데 다음과 같은 규칙을 따른다.
-    
-    먼저 뱀은 몸길이를 늘려 머리를 다음칸에 위치시킨다.
-    만약 벽이나 자기자신의 몸과 부딪히면 게임이 끝난다.
-    만약 이동한 칸에 사과가 있다면, 그 칸에 있던 사과가 없어지고 꼬리는 움직이지 않는다.
-    만약 이동한 칸에 사과가 없다면, 몸길이를 줄여서 꼬리가 위치한 칸을 비워준다. 즉, 몸길이는 변하지 않는다.
-
-    '''
+    nIdx = 0  # 초기 방향: 오른쪽
+    nTime = 0  # 경과 시간
 
     qSnake = deque()
+    qSnake.append((0, 0))  # 뱀의 초기 위치
+    sMap[0][0] = 1  # 뱀 표시
 
-    qSnake.append([0, 0])
+    x, y = 0, 0  # 머리 위치
 
-    while True :
+    while True:
+        # 방향 전환 확인
+        if nTime in dictMove:
+            if dictMove[nTime] == "L":
+                nd = 3 if nIdx == 0 else nIdx - 1
+                nIdx = nd
+            elif dictMove[nTime] == "D":
+                nIdx = (nIdx + 1) % 4
 
-        tHX, tHY = qSnake.popleft()
+        # 이동
+        nextX, nextY = x + rM[nIdx], y + cM[nIdx]
 
-        nTime += 1
-
-        #Todo
-        if dictMove[str(nTime)] == "L" :
-            nIdx = nIdx - 1
-        elif dictMove[str(nTime)] == "D" :
-            #0 -> 3 -> 1 -> 2
-            nIdx = nIdx - 3
-
-        #움직임
-        tHX += rM[nIdx]
-        tHY += cM[nIdx]
-
-        if 0 > tHX or tHX >= N or 0 > tHY or tHY >= N :
-            print(nTime)
+        # 벽 또는 자기 몸과 충돌하면 종료
+        if nextX < 0 or nextX >= N or nextY < 0 or nextY >= N or (nextX, nextY) in qSnake:
             break
 
+        # 사과가 없으면 꼬리 제거
+        if sMap[nextY][nextX] != 2:
+            tHX, tHY = qSnake.popleft()
+            sMap[tHY][tHX] = 0
 
+        # 머리 추가
+        sMap[nextY][nextX] = 1
+        qSnake.append((nextX, nextY))
 
+        x, y = nextX, nextY
+        nTime += 1
 
+    print(nTime + 1)
 
-    return
-
-
-if __name__ == "__main__" :
+if __name__ == "__main__":
     main()
